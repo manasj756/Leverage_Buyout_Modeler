@@ -1,0 +1,952 @@
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                     LBO FINANCIAL MODEL — COMPLETE PROJECT DOCUMENTATION           ║
+║                     Python | Private Equity | Financial Modelling                  ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+Author        : [Your Name]
+Target Role   : Private Equity / Venture Capital Analyst
+Language      : Python 3.10+
+Last Updated  : 2024
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: WHAT IS THIS PROJECT?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This project is a fully functional Leveraged Buyout (LBO) financial model built
+entirely in Python. It replicates the core analytical workflow that a Private Equity
+analyst performs when evaluating whether to acquire a company.
+
+The model takes a target company (Devyani International — KFC/Pizza Hut India
+franchisee), simulates acquiring it using 65% debt and 35% equity, projects 5 years
+of financial performance, models how the company's own cash flows repay the
+acquisition debt, and finally calculates the return on investment when the company
+is sold.
+
+The output answers the single most important question in PE:
+
+    "If we buy this company today, how much money do we make when we sell it?"
+
+This is measured by two numbers:
+    — IRR  (Internal Rate of Return)     : annualized % return on equity invested
+    — MoM  (Money-on-Money Multiple)     : how many times you got your money back
+
+The project also stress-tests the deal across multiple scenarios and deal structures,
+producing the kind of investment analysis that gets presented to a PE investment
+committee before committing hundreds of crores to a deal.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: THE BUSINESS CONCEPT — WHAT IS AN LBO?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A Leveraged Buyout is the acquisition of a company using a combination of equity
+(your own money) and a large amount of debt (borrowed money). The acquired company's
+own cash flows are then used to repay the debt over the holding period.
+
+ANALOGY:
+   Buying a house worth ₹1 Cr. You pay ₹35 Lakh of your own money and take
+   a ₹65 Lakh mortgage. The house itself earns rental income that pays the
+   mortgage. After 5 years, you sell the house — now worth ₹1.5 Cr — and
+   pocket the difference after repaying remaining mortgage. That profit on
+   your ₹35 Lakh original investment is your "return."
+
+   An LBO works the same way, but instead of a house, you're buying a company.
+   Instead of rent, the company's free cash flow repays the debt.
+
+WHY USE DEBT?
+   Debt amplifies equity returns. Here's the math:
+
+   Without leverage:
+     Buy company for ₹960 Cr with 100% equity.
+     Sell after 5 years for ₹1,400 Cr.
+     Return = 1400/960 = 1.46x (7.8% IRR)
+
+   With leverage (65% debt):
+     Buy company for ₹960 Cr with ₹336 Cr equity + ₹624 Cr debt.
+     Sell after 5 years for ₹1,400 Cr. Remaining debt = ₹251 Cr.
+     Equity proceeds = 1400 - 251 = ₹1,149 Cr
+     Return = 1149/336 = 3.4x (27.8% IRR)
+
+   Same company. Same growth. But the return nearly DOUBLES because of leverage.
+   This is the fundamental logic of private equity investing.
+
+THE THREE DRIVERS OF LBO RETURNS:
+   Every rupee of profit in an LBO comes from exactly three sources:
+
+   1. EBITDA GROWTH
+      The company becomes more profitable over the holding period.
+      Higher EBITDA at exit → higher enterprise value at exit.
+      This is the "operational value creation" component.
+
+   2. DEBT PAYDOWN
+      Every rupee of debt repaid = one more rupee of equity at exit.
+      The company literally pays for itself over time.
+      In a well-structured LBO, 50-70% of debt is repaid by exit.
+
+   3. MULTIPLE EXPANSION
+      If you buy at 8x EBITDA and sell at 9x EBITDA, that 1-turn difference
+      applied to a larger exit EBITDA creates significant additional value.
+      Example: Exit EBITDA = ₹215 Cr. One extra turn = ₹215 Cr more EV.
+
+   The "return attribution" module in this project decomposes IRR into
+   these three buckets — this is what separates senior PE analysts from juniors.
+
+WHAT MAKES A GOOD LBO TARGET?
+   Not every company can be acquired via LBO. The ideal target has:
+   — Stable, predictable free cash flow (to service debt)
+   — Strong EBITDA margins (more cash generation)
+   — Low existing debt (room to add acquisition debt)
+   — Asset-light model (less capex needed)
+   — Defensible market position (revenue won't collapse)
+   — Clear exit path (another PE firm or IPO can buy it)
+
+   Devyani International fits most of these criteria — it's a QSR franchise
+   with recurring customer demand, manageable capex, and a trackable margin profile.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: PROJECT SCOPE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IN SCOPE (what this model does):
+   ✔ 5-year projected Income Statement with FCF
+   ✔ Iterative Debt Repayment Schedule (solves circular dependency)
+   ✔ IRR and MoM return calculation
+   ✔ Return attribution across 3 value creation drivers
+   ✔ 4-scenario analysis: Bull / Base / Bear / Distressed
+   ✔ 2-variable sensitivity heatmaps (entry×exit, growth×margin)
+   ✔ Debt waterfall and FCF visualization charts
+   ✔ Auto-generated 5-sheet Excel tearsheet
+   ✔ CLI argument support (override assumptions without editing code)
+
+OUT OF SCOPE (simplifications made for clarity):
+   ✘ Multiple debt tranches (senior / mezzanine / PIK) — model uses single tranche
+   ✘ Dividend recapitalization during hold period
+   ✘ Working capital seasonality
+   ✘ Deferred tax assets / liabilities
+   ✘ Acquisition goodwill and amortization
+   ✘ Management equity rollover
+   ✘ Real-time market data integration
+   ✘ Monte Carlo simulation (possible extension)
+
+DESIGN PHILOSOPHY:
+   Every module is independently runnable (python assumptions.py runs fine alone).
+   All assumptions live in one place (assumptions.py) — change one number, the
+   entire model updates. The sensitivity engine is generic — any two variables
+   can be swept without writing new code. The Excel export is fully automated —
+   no manual formatting required.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4: FILE STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/LBO-Model
+│
+├── src/                          ← All Python source files live here
+│   ├── assumptions.py            ← Module 1: Deal parameters and computed properties
+│   ├── income_statement.py       ← Module 2: 5-year P&L + FCF projection
+│   ├── debt_schedule.py          ← Module 3: Iterative debt paydown engine
+│   ├── returns.py                ← Module 4: IRR, MoM, return attribution
+│   ├── scenarios.py              ← Module 5: Multi-scenario analysis
+│   ├── sensitivity.py            ← Module 6: Sensitivity heatmap generator
+│   └── main.py                   ← Module 7: Orchestrator — runs everything
+│
+├── outputs/
+│   ├── charts/                   ← Auto-generated matplotlib PNG files
+│   │   ├── debt_waterfall.png
+│   │   ├── scenarios.png
+│   │   ├── heatmap_entry_exit.png
+│   │   └── heatmap_operations.png
+│   └── tearsheet/
+│       └── LBO_Tearsheet.xlsx    ← Auto-formatted Excel workbook
+│
+├── data/                         ← Raw financial data (CSVs from annual reports)
+│   └── financials.csv            ← Historical revenue, EBITDA, debt (optional)
+│
+├── requirements.txt              ← Python package dependencies
+└── README.md                     ← GitHub documentation
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5: FILE-BY-FILE EXPLANATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+FILE 1: assumptions.py
+────────────────────────────────────────
+
+PURPOSE:
+   The single source of truth for every number in the model. If you change
+   one number here, the entire downstream model updates automatically.
+   In professional PE shops, this is called the "input sheet."
+
+KEY CONTENTS:
+   — Company name and base year
+   — Entry EV/EBITDA multiple (what you pay)
+   — Entry EBITDA (company's earnings at time of purchase)
+   — Exit EV/EBITDA multiple (what you sell at)
+   — Holding period (how many years you own it)
+   — Debt percentage (what fraction of EV is funded by debt)
+   — Interest rate on debt
+   — Revenue base and CAGR (growth rate)
+   — EBITDA margin (profitability as % of revenue)
+   — Depreciation, Capex, Working Capital percentages
+   — Tax rate
+   — Cash sweep flag (True = use all FCF to repay debt aggressively)
+
+COMPUTED PROPERTIES (auto-calculated from inputs):
+   — entry_ev        = entry_year_ebitda × entry_ev_multiple
+   — total_debt      = entry_ev × debt_pct
+   — equity_invested = entry_ev × (1 - debt_pct)
+
+DESIGN CHOICE:
+   Uses Python's @dataclass decorator for clean, type-annotated structure.
+   @property decorators compute derived values automatically — no need to
+   manually update entry_ev whenever you change entry_multiple.
+
+EXAMPLE NUMBERS (base case):
+   Entry EBITDA      = ₹120 Cr
+   Entry Multiple    = 8x
+   Entry EV          = ₹960 Cr
+   Debt (65%)        = ₹624 Cr
+   Equity (35%)      = ₹336 Cr
+   Interest Rate     = 10%
+   Revenue Base      = ₹800 Cr
+   Revenue CAGR      = 12%
+   EBITDA Margin     = 18%
+   Exit Multiple     = 9x
+   Holding Period    = 5 years
+
+HOW TO USE:
+   from assumptions import DealAssumptions
+   deal = DealAssumptions()           # loads defaults
+   deal.entry_ev_multiple = 7.5      # override any value
+   deal.summary()                     # prints deal snapshot
+
+────────────────────────────────────────
+FILE 2: income_statement.py
+────────────────────────────────────────
+
+PURPOSE:
+   Projects a 5-year Income Statement and computes Free Cash Flow (FCF)
+   for each year. FCF is the critical output — it's what funds debt repayment.
+
+THE INCOME STATEMENT WATERFALL:
+   Revenue                                     (grows at CAGR each year)
+   × EBITDA Margin
+   = EBITDA                                    (operating cash generation)
+   − Depreciation & Amortization (D&A)         (non-cash charge)
+   = EBIT                                      (operating profit)
+   − Interest Expense                          (cost of LBO debt)
+   = EBT (Earnings Before Tax)
+   − Tax (25% of positive EBT only)
+   = Net Income
+
+   FREE CASH FLOW CALCULATION:
+   EBITDA                                      (start from EBITDA, not net income)
+   − Tax                                       (actual cash tax paid)
+   − Capex                                     (cash spent on assets)
+   − Change in Working Capital                 (cash absorbed by operations)
+   = FREE CASH FLOW                            (real cash available for debt repayment)
+
+   WHY START FCF FROM EBITDA (NOT NET INCOME)?
+   Because D&A is a non-cash expense. It reduces net income on paper but
+   no actual cash leaves the company. So we add it back. Starting from
+   EBITDA and subtracting only real cash costs gives true cash generation.
+
+KEY FUNCTION: project_income_statement(assumptions, debt_schedule)
+   — Takes DealAssumptions object
+   — Optionally takes debt_schedule (list of opening debt balances per year)
+     to compute accurate interest expense. Without it, uses simplified flat debt.
+   — Returns a pandas DataFrame: rows = line items, columns = projection years
+
+IMPORTANT NOTE ON INTEREST EXPENSE:
+   Interest expense depends on the opening debt balance each year.
+   But the opening debt balance depends on prior year FCF.
+   And FCF depends on interest expense (via tax impact).
+   This creates a CIRCULAR DEPENDENCY — resolved in debt_schedule.py.
+
+────────────────────────────────────────
+FILE 3: debt_schedule.py
+────────────────────────────────────────
+
+PURPOSE:
+   Models how acquisition debt gets paid down year by year using the
+   company's Free Cash Flow. Also tracks the leverage ratio each year.
+   This is the mechanical heart of the LBO model.
+
+THE CIRCULAR DEPENDENCY PROBLEM:
+   Income Statement needs interest expense to compute FCF.
+   Interest expense = opening debt × interest rate.
+   Opening debt depends on prior year's closing debt.
+   Closing debt = opening debt − repayment.
+   Repayment depends on FCF.
+   FCF depends on interest expense.
+   CIRCLE: FCF → repayment → debt balance → interest → FCF
+
+HOW WE SOLVE IT (Iterative Convergence):
+   Step 1: Start with simplified assumption — debt stays flat all 5 years.
+           Compute IS and FCF using this simplified interest expense.
+   Step 2: Use that FCF to build a first debt schedule.
+           Now we have real opening balances for each year.
+   Step 3: Feed those real opening balances back into the IS.
+           Recompute FCF with accurate interest expense.
+   Step 4: Rebuild debt schedule with new FCF.
+   Step 5: Repeat until closing balances stop changing (< ₹0.01 Cr difference).
+           Usually converges in 3-5 iterations.
+
+   This is exactly what Excel does when you enable "circular references"
+   with iterative calculation. We're replicating that logic in Python.
+
+KEY FUNCTION: build_debt_schedule(assumptions, max_iterations, tolerance)
+   Returns: (debt_df, is_df) — both fully reconciled DataFrames
+
+DEBT SCHEDULE LINE ITEMS:
+   Opening Debt Balance        (what we owe at start of year)
+   Interest Expense            (opening balance × interest rate)
+   FCF Available               (from income statement)
+   Debt Repayment              (min(FCF, opening balance) — can't repay more than owed)
+   Closing Debt Balance        (opening − repayment)
+   Leverage Ratio              (opening debt / EBITDA — key bank covenant metric)
+
+CASH SWEEP LOGIC:
+   When cash_sweep = True (default), ALL available FCF goes to debt repayment.
+   This maximizes debt paydown speed, which maximizes equity return at exit.
+   Alternative: scheduled amortization (fixed repayment each year regardless of FCF).
+   In real deals, both exist — senior debt has mandatory amortization,
+   revolving credit can be swept with excess cash.
+
+LEVERAGE RATIO:
+   Debt/EBITDA ratio is how banks measure a company's debt burden.
+   At acquisition: might be 5-6x (highly leveraged)
+   By exit year: should fall to 2-3x (demonstrates successful deleveraging)
+   Banks typically require covenants: "Debt/EBITDA must not exceed 6x"
+
+────────────────────────────────────────
+FILE 4: returns.py
+────────────────────────────────────────
+
+PURPOSE:
+   Calculates the PE firm's investment returns and decomposes them
+   into the three value creation drivers. This is the payoff module
+   where all prior calculations culminate in the final investment verdict.
+
+KEY FUNCTION: calculate_returns(assumptions)
+   1. Calls build_debt_schedule() to get reconciled IS and debt schedule
+   2. Reads exit year EBITDA from IS
+   3. Computes Exit EV = Exit EBITDA × Exit Multiple
+   4. Computes Exit Equity = Exit EV − Remaining Debt at Exit
+   5. Builds cash flow stream for IRR calculation
+   6. Computes IRR using numpy_financial.irr()
+   7. Computes MoM = Exit Equity / Equity Invested
+   8. Runs return attribution decomposition
+
+IRR EXPLAINED:
+   IRR = Internal Rate of Return = the discount rate that makes the
+   Net Present Value (NPV) of all cash flows equal to zero.
+
+   In simple terms: "What annual interest rate would a savings account
+   need to offer to give you the same result as this investment?"
+
+   Cash flow stream passed to IRR function:
+     Year 0  : -₹336 Cr    (equity invested — negative because cash OUT)
+     Year 1  :  ₹0          (no dividends during hold — PE standard)
+     Year 2  :  ₹0
+     Year 3  :  ₹0
+     Year 4  :  ₹0
+     Year 5  : +₹X Cr      (exit equity proceeds — positive because cash IN)
+
+   numpy_financial.irr() solves: 0 = -336 + X/(1+r)^5 for r.
+
+   PE BENCHMARKS:
+     IRR > 25% : Exceptional — top quartile deal
+     IRR 20-25%: Good — meets standard PE hurdle rate
+     IRR 15-20%: Marginal — below hurdle, likely rejected
+     IRR < 15% : Weak — does not justify illiquidity premium over public markets
+
+MoM (MONEY-ON-MONEY) EXPLAINED:
+   MoM = Exit Equity / Equity Invested
+   Simple ratio. If you invested ₹336 Cr and got back ₹910 Cr: MoM = 2.7x
+
+   WHY MoM AND IRR TOGETHER?
+   MoM ignores time. A 3x MoM in 3 years is phenomenal (44% IRR).
+   A 3x MoM in 10 years is mediocre (11.6% IRR).
+   IRR accounts for time. MoM shows raw magnitude of return.
+   PE reports BOTH because they capture different dimensions of performance.
+
+RETURN ATTRIBUTION:
+   Decomposes total equity gain into three buckets:
+
+   a) EBITDA Growth Contribution:
+      How much equity was created purely from the company becoming more profitable?
+      Calculated as: (Exit EBITDA × Entry Multiple) − Entry Equity
+      This isolates the "company grew" effect by holding multiple constant.
+
+   b) Multiple Expansion:
+      How much equity was created from selling at a higher multiple than entry?
+      Calculated as: Exit EBITDA × (Exit Multiple − Entry Multiple)
+      This isolates the "market re-rated the company" effect.
+
+   c) Debt Paydown:
+      How much equity was created purely from debt being repaid?
+      Calculated as: Total Debt − Remaining Debt at Exit
+      Every rupee of debt repaid transfers directly to equity holders at exit.
+
+   EXAMPLE ATTRIBUTION (base case):
+     Equity Invested          : ₹336 Cr
+     EBITDA Growth            : +₹287 Cr  (37% of value created)
+     Multiple Expansion       : +₹192 Cr  (25% of value created)
+     Debt Paydown             : +₹373 Cr  (48% of value created)  ← largest driver
+     Exit Equity              : ₹908 Cr
+     MoM                      : 2.7x
+
+────────────────────────────────────────
+FILE 5: scenarios.py
+────────────────────────────────────────
+
+PURPOSE:
+   Runs the full LBO model under four different economic environments.
+   Tests the investment thesis under both favourable and adverse conditions.
+   The output tells you if the deal has "margin of safety."
+
+WHY SCENARIOS MATTER:
+   Every assumption in the model is uncertain. Revenue might grow slower.
+   Competition might compress margins. The exit market might weaken.
+   Scenarios answer: "How badly do things have to go before we lose money?"
+
+FOUR SCENARIOS DEFINED:
+
+   BULL CASE:
+     Revenue CAGR      : 18%     (strong consumer demand, new store rollout)
+     EBITDA Margin     : 22%     (operating leverage, cost control)
+     Exit Multiple     : 10x     (market is buoyant, premium for quality)
+     Interest Rate     : 9%      (negotiated better debt terms)
+     Narrative         : Everything goes right. Management over-delivers.
+
+   BASE CASE:
+     Revenue CAGR      : 12%     (steady historical growth rate)
+     EBITDA Margin     : 18%     (margins hold stable)
+     Exit Multiple     : 9x      (exit at same market conditions as entry)
+     Interest Rate     : 10%     (standard market rate)
+     Narrative         : Management case. What was presented to investment committee.
+
+   BEAR CASE:
+     Revenue CAGR      : 6%      (economic slowdown, competition intensifies)
+     EBITDA Margin     : 14%     (food cost inflation, wage increases)
+     Exit Multiple     : 7x      (market de-rates QSR sector)
+     Interest Rate     : 11%     (credit tightening, lender demands premium)
+     Narrative         : Things go wrong. But company survives. This is the test.
+
+   DISTRESSED CASE:
+     Revenue CAGR      : 2%      (near-recessionary — barely growing)
+     EBITDA Margin     : 11%     (severe margin erosion)
+     Exit Multiple     : 5.5x    (fire-sale conditions)
+     Interest Rate     : 12%     (distressed debt premium)
+     Narrative         : Worst realistic scenario. Tests if equity is wiped out.
+
+SCENARIO DESIGN PRINCIPLE:
+   Notice that all four variables move together in the Bear/Distressed cases.
+   This is intentional. In bad economic times, growth slows AND margins compress
+   AND exit markets weaken AND borrowing costs rise — SIMULTANEOUSLY.
+   Modelling them independently would understate the true downside risk.
+   Correlated scenario design is what distinguishes professional risk analysis.
+
+KEY QUESTION THE BEAR CASE ANSWERS:
+   "If everything goes wrong, do we at least get our money back?"
+   If Bear Case MoM > 1.0x → equity is not wiped out → deal has downside protection.
+   If Bear Case MoM < 1.0x → equity is destroyed in bad times → deal is too risky.
+
+KEY FUNCTIONS:
+   run_all_scenarios(base_assumptions)    → runs all 4 scenarios, returns results dict
+   build_scenario_table(all_results)      → builds comparison DataFrame for printing
+   plot_scenario_comparison(all_results)  → generates 2-panel bar chart
+
+────────────────────────────────────────
+FILE 6: sensitivity.py
+────────────────────────────────────────
+
+PURPOSE:
+   The most visually impressive component of the project. Generates
+   color-coded heatmaps showing how IRR changes across a grid of
+   two simultaneous assumption changes. Used by PE firms to set
+   maximum bid prices and minimum acceptable exit requirements.
+
+WHAT IS SENSITIVITY ANALYSIS?
+   Instead of asking "what is the IRR?" (one number), we ask:
+   "How does IRR change as Entry Multiple varies from 6x to 11x
+    AND Exit Multiple varies from 7x to 11x simultaneously?"
+
+   The result is a 6×5 matrix — 30 different IRR calculations —
+   displayed as a color-coded table where green = good return
+   and red = value destruction.
+
+TWO HEATMAPS GENERATED:
+
+   HEATMAP 1 — Deal Pricing Sensitivity:
+     Rows    : Entry EV/EBITDA Multiple [6x, 7x, 8x, 9x, 10x, 11x]
+     Columns : Exit EV/EBITDA Multiple  [7x, 8x, 9x, 10x, 11x]
+     Values  : IRR (%)
+     Purpose : Tells you "how much can we pay for this company?" and
+               "what exit do we need to clear our return hurdle?"
+     Use     : Investment committee uses this to set maximum bid price.
+               "We cannot pay more than 8.5x entry under any scenario."
+
+   HEATMAP 2 — Operational Sensitivity:
+     Rows    : Revenue CAGR    [4%, 6%, 8%, 10%, 12%, 15%, 18%]
+     Columns : EBITDA Margin   [12%, 14%, 16%, 18%, 20%, 22%]
+     Values  : IRR (%)
+     Purpose : Tells you "how dependent is our return on management execution?"
+               Shows whether the deal works even with below-plan operations.
+     Use     : Operations team uses this to set minimum performance targets
+               for portfolio company management post-acquisition.
+
+COLOR CONVENTION (consistent with industry standard):
+   Dark Green  (#1A5C38) : IRR > 25%  — Exceptional, top-quartile return
+   Green       (#27AE60) : IRR 20-25% — Good, clears PE hurdle rate
+   Yellow      (#D4AC0D) : IRR 15-20% — Marginal, below hurdle
+   Orange      (#CA6F1E) : IRR 10-15% — Weak, consider passing
+   Red         (#922B21) : IRR < 10%  — Avoid, value destruction territory
+
+BASE CASE CELL:
+   The base case combination is highlighted with a white border on the heatmap,
+   so you can instantly see where the modelled scenario sits in the grid.
+
+KEY FUNCTION: run_sensitivity(assumptions, var1_name, var1_values, var2_name, var2_values)
+   GENERIC DESIGN: This function accepts ANY two assumptions as inputs.
+   You can sweep any combination without writing new code. Examples:
+     run_sensitivity(deal, "interest_rate", [0.08,0.09,0.10,0.11,0.12],
+                          "holding_period", [3, 4, 5, 6, 7])
+     → IRR grid: interest rate vs holding period
+
+     run_sensitivity(deal, "debt_pct", [0.50,0.55,0.60,0.65,0.70],
+                          "exit_ev_multiple", [7,8,9,10,11])
+     → IRR grid: leverage level vs exit multiple
+
+────────────────────────────────────────
+FILE 7: main.py
+────────────────────────────────────────
+
+PURPOSE:
+   The single entry point that orchestrates all modules. Run this one
+   file and the entire LBO analysis executes end to end. Also contains:
+   — CLI argument parser (override assumptions from terminal)
+   — Debt waterfall chart (additional visualization)
+   — Excel tearsheet exporter (5-sheet formatted workbook)
+
+EXECUTION FLOW:
+   1. Parse CLI arguments (if any)
+   2. Build DealAssumptions (with any CLI overrides applied)
+   3. Call calculate_returns() → runs IS + debt schedule + returns
+   4. Print income statement and debt schedule to console
+   5. Call run_all_scenarios() → 4 scenario runs
+   6. Call plot_debt_waterfall() → chart showing debt vs equity over time
+   7. Call plot_scenario_comparison() → scenario bar charts
+   8. Call run_all_sensitivities() → two heatmaps
+   9. Call export_excel_tearsheet() → full Excel workbook
+   10. Print final summary
+
+CLI ARGUMENTS:
+   --company "Name"   : Override company name
+   --entry  8.5       : Override entry multiple
+   --exit   10        : Override exit multiple
+   --cagr   0.15      : Override revenue CAGR (as decimal)
+   --debt   0.60      : Override debt percentage (as decimal)
+   --hold   4         : Override holding period (years)
+   --no-plots         : Skip chart generation (faster, text-only output)
+
+   EXAMPLES:
+   python main.py                             # runs with all defaults
+   python main.py --entry 7 --exit 10        # aggressive pricing scenario
+   python main.py --cagr 0.18 --no-plots     # test high growth, no charts
+   python main.py --company "Sapphire Foods" --entry 7.5 --exit 9
+
+DEBT WATERFALL CHART (generated in main.py):
+   Left panel  : Stacked bar showing debt (red) + equity (green) each year.
+                 Shows visually how debt shrinks and equity grows.
+                 Entry EV reference line shows the original purchase price.
+   Right panel : Annual FCF bars with leverage ratio (Debt/EBITDA) annotated.
+                 Shows the "engine" — cash generation declining leverage.
+
+EXCEL TEARSHEET — 5 SHEETS:
+   Sheet 1: Deal Summary
+            — All deal parameters in one view
+            — IRR colored green/yellow/red based on PE hurdle
+            — Return attribution table
+   Sheet 2: Income Statement
+            — Full 5-year P&L projection
+            — FCF rows highlighted in green
+   Sheet 3: Debt Schedule
+            — Year-by-year debt paydown
+            — Closing debt highlighted in green
+   Sheet 4: Scenario Analysis
+            — All 4 scenarios side by side
+            — Row background colored by scenario type
+   Sheet 5: Sensitivity Tables
+            — Both heatmaps in color-coded format
+            — Green/yellow/orange/red cells based on IRR thresholds
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6: DATA FLOW — HOW MODULES CONNECT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                        ┌─────────────────────┐
+                        │   assumptions.py    │
+                        │   (all inputs)      │
+                        └──────────┬──────────┘
+                                   │ DealAssumptions object
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+          ┌──────────────┐  ┌──────────┐  ┌──────────────┐
+          │ income_      │  │ debt_    │  │ scenarios.py │
+          │ statement.py │◄─┤schedule  │  │(calls returns│
+          │              │  │.py       │  │ internally)  │
+          └──────┬───────┘  └────┬─────┘  └──────┬───────┘
+                 │               │                │
+                 │ FCF series    │ debt_df        │ results dict
+                 └───────┬───────┘                │
+                         ▼                        ▼
+                  ┌─────────────┐         ┌──────────────┐
+                  │  returns.py │         │ scenarios.py │
+                  │  (IRR, MoM, │         │ (table +     │
+                  │attribution) │         │  chart)      │
+                  └──────┬──────┘         └──────┬───────┘
+                         │                        │
+                         └───────────┬────────────┘
+                                     ▼
+                          ┌──────────────────────┐
+                          │    sensitivity.py    │
+                          │  (sweeps any 2 vars) │
+                          └──────────┬───────────┘
+                                     │
+                                     ▼
+                          ┌──────────────────────┐
+                          │       main.py        │
+                          │  (orchestrates all,  │
+                          │   exports tearsheet) │
+                          └──────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7: KEY FINANCIAL CONCEPTS GLOSSARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EBITDA (Earnings Before Interest, Tax, Depreciation & Amortization):
+   The most widely used measure of a company's operating cash generation.
+   Strips out financing costs (interest), tax effects, and non-cash charges
+   (D&A) to show pure operational profitability. LBO valuations are almost
+   always expressed as multiples of EBITDA.
+
+ENTERPRISE VALUE (EV):
+   The total value of a company — what it would cost to buy the entire business.
+   EV = Market Cap + Net Debt (for public companies)
+   EV = Purchase Price (in an M&A transaction)
+   Important: EV is the value of the BUSINESS. Equity value is what's left
+   for shareholders after repaying debt.
+
+EV/EBITDA MULTIPLE:
+   The valuation multiple. "We're buying at 8x EBITDA" means:
+   Purchase Price = 8 × EBITDA.
+   Industry and growth determine what multiple is "fair."
+   Higher multiple = more expensive. Lower multiple = cheaper.
+
+FREE CASH FLOW (FCF):
+   The actual cash a business generates that can be used for debt repayment,
+   dividends, or reinvestment. NOT the same as profit.
+   FCF = EBITDA − Tax − Capex − Change in Working Capital
+   In LBOs, FCF is the debt repayment engine.
+
+IRR (Internal Rate of Return):
+   The annualized return on an investment. Accounts for both magnitude
+   and timing of cash flows. Solved by finding r where NPV = 0.
+   Industry benchmark for PE: 20-25%+.
+
+MoM (Money-on-Money Multiple):
+   Total cash returned / Total cash invested.
+   Does not account for time. Used alongside IRR.
+   PE benchmark: 2.5x-3x over 5 years.
+
+LEVERAGE RATIO (Debt/EBITDA):
+   How many years of EBITDA it would take to repay all debt.
+   Banks use this as a covenant. LBOs typically enter at 5-6x,
+   and must reduce it over the hold period.
+
+CASH SWEEP:
+   Using all available Free Cash Flow to repay debt as fast as possible.
+   Maximizes debt paydown speed → maximizes equity value at exit.
+
+HURDLE RATE:
+   The minimum acceptable IRR for a PE fund. Typically 20%.
+   If a deal can't generate 20%+ IRR, the fund won't invest.
+   Why 20%? Because PE investors lock up money for 5-7 years.
+   They demand a premium over public market returns (~12-15%).
+
+MULTIPLE EXPANSION:
+   When exit EV/EBITDA multiple > entry EV/EBITDA multiple.
+   Creates instant value even if operations stay flat.
+   The inverse (multiple compression) destroys value.
+
+CAPEX (Capital Expenditure):
+   Cash spent on physical assets — stores, equipment, property.
+   Reduces FCF. High-capex businesses are harder LBO candidates.
+   Asset-light businesses (software, food chains, logistics) are preferred.
+
+WORKING CAPITAL:
+   Money tied up in the operating cycle: inventory + receivables − payables.
+   Growth consumes working capital (you need more cash to fund bigger operations).
+   This is why fast-growing companies sometimes run out of cash despite being profitable.
+
+RETURN ATTRIBUTION:
+   Decomposing total investment return into its three sources:
+   EBITDA growth + Multiple expansion + Debt paydown.
+   Tells you which lever created the most value in a deal.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8: LIBRARIES USED AND WHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+numpy (np):
+   Core numerical computing. Used for array operations, NaN handling,
+   matrix construction in sensitivity analysis. Foundation of all
+   scientific Python computing.
+
+numpy_financial (npf):
+   Financial functions separated from numpy core in v1.0.
+   We use npf.irr() — the IRR calculator. Takes a list of cash flows,
+   returns the discount rate where NPV = 0. Essential for returns.py.
+
+pandas (pd):
+   Data manipulation and tabular output. Every financial table in the
+   project (income statement, debt schedule, scenario table) is a
+   pandas DataFrame. Makes row/column operations and printing clean.
+
+matplotlib (plt):
+   Core plotting library. Used for all bar charts, waterfall charts,
+   debt paydown visualizations, and as the base for heatmaps.
+   All charts use a dark theme (#0f0f0f background) for visual impact.
+
+seaborn (sns):
+   Statistical visualization built on matplotlib. Used specifically
+   for sns.heatmap() in sensitivity.py — handles the color-coded
+   matrix visualization with annotations efficiently.
+
+openpyxl:
+   Excel file creation and formatting in Python. Used in main.py to
+   build the 5-sheet tearsheet with custom colors, fonts, borders,
+   and merged cells. Produces a .xlsx file that looks professionally
+   formatted without any manual work.
+
+copy (standard library):
+   Used in scenarios.py and sensitivity.py to deep-copy the base
+   DealAssumptions object before applying overrides. Ensures the
+   base case is never mutated by scenario/sensitivity runs.
+
+dataclasses (standard library):
+   Used in assumptions.py. @dataclass automatically generates
+   __init__, __repr__ etc. from class fields. Clean, readable way
+   to define a configuration object with type annotations.
+
+argparse (standard library):
+   Command-line argument parsing in main.py. Allows overriding
+   assumptions from the terminal without editing source code.
+   Standard Python approach to building CLI tools.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 9: SETUP AND EXECUTION GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: PREREQUISITES
+   — Python 3.10 or higher
+   — pip (comes with Python)
+   — Git (for GitHub upload)
+
+STEP 2: INSTALL DEPENDENCIES
+   pip install numpy numpy_financial pandas matplotlib seaborn openpyxl
+
+STEP 3: PROJECT SETUP
+   Create this folder structure on your machine:
+   /LBO-Model/
+     /src/        ← paste all 7 .py files here
+     /outputs/charts/
+     /outputs/tearsheet/
+     /data/
+     requirements.txt
+     README.md
+
+STEP 4: RUN THE MODEL
+   cd LBO-Model/src
+   python main.py
+
+   Expected terminal output:
+   ████████████████████████████████████████████████████████████
+     LBO FINANCIAL MODEL — PYTHON
+   ████████████████████████████████████████████████████████████
+
+   [deal summary printed]
+   [1/5] Calculating base case returns...
+   [income statement printed]
+   [debt schedule printed]
+   [2/5] Running scenarios...
+   [scenario table printed]
+   [3/5] Generating charts... [4 charts appear]
+   [4/5] Running sensitivity analysis... [2 heatmaps appear]
+   [5/5] Exporting Excel tearsheet...
+
+   Excel tearsheet saved -> outputs/tearsheet/LBO_Tearsheet.xlsx
+   ████████████████████████████████████████████████████████████
+     COMPLETE. Results for Devyani International
+     Base IRR   : 23.1%
+     Base MoM   : 2.71x
+   ████████████████████████████████████████████████████████████
+
+STEP 5: TEST INDIVIDUAL MODULES
+   cd src
+   python assumptions.py          # prints deal summary
+   python income_statement.py     # prints 5-year P&L
+   python debt_schedule.py        # prints debt paydown table
+   python returns.py              # prints IRR, MoM, attribution
+   python scenarios.py            # runs all 4 scenarios
+   python sensitivity.py          # generates heatmaps
+
+STEP 6: UPLOAD TO GITHUB
+   cd LBO-Model
+   git init
+   git add .
+   git commit -m "Initial commit: LBO Financial Model in Python"
+   git remote add origin https://github.com/yourusername/LBO-Model.git
+   git push -u origin main
+
+   Then: Go to your GitHub profile → pin this repository.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 10: HOW TO CUSTOMIZE FOR ANOTHER COMPANY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To model a DIFFERENT company (e.g., Sapphire Foods, Metro Brands):
+
+1. Download the company's last 3 Annual Reports from BSE/NSE
+2. Extract these numbers:
+   — Revenue (last year)
+   — EBITDA (or calculate as Revenue − COGS − Employee costs − Other opex)
+   — Depreciation & Amortization
+   — Capex
+   — Current Assets and Current Liabilities (for working capital)
+   — Existing Debt
+
+3. Open assumptions.py and update:
+   company_name          = "Your Company Name"
+   entry_year_ebitda     = [actual EBITDA in Cr]
+   revenue_base          = [actual Revenue in Cr]
+   revenue_cagr          = [realistic growth rate based on history]
+   ebitda_margin         = [EBITDA / Revenue]
+   depreciation_pct_revenue = [D&A / Revenue]
+   capex_pct_revenue     = [Capex / Revenue]
+   entry_ev_multiple     = [research comparable M&A transactions]
+
+4. Run python main.py — everything else updates automatically.
+
+HOW TO FIND COMPARABLE TRANSACTION MULTIPLES:
+   Search: "[Industry] M&A transactions EV/EBITDA India"
+   Sources: Refinitiv, Bloomberg (if you have access), news articles
+   Rule of thumb: QSR/FMCG trades at 8-12x EBITDA in India currently
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 11: POSSIBLE EXTENSIONS (TO STAND OUT FURTHER)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXTENSION 1: MULTIPLE DEBT TRANCHES
+   Real LBOs use layered debt structures:
+   — Senior Secured Debt (cheapest, paid first)
+   — Mezzanine Debt (higher rate, subordinate)
+   — PIK (Payment-in-Kind — interest accrues, not paid in cash)
+   Model each tranche separately in debt_schedule.py.
+
+EXTENSION 2: MONTE CARLO SIMULATION
+   Instead of 4 fixed scenarios, run 10,000 random simulations
+   where assumptions are drawn from probability distributions.
+   Output: IRR distribution histogram showing probability of
+   clearing the hurdle rate. Much more sophisticated risk analysis.
+
+EXTENSION 3: LIVE DATA INTEGRATION
+   Use the yfinance library to pull real stock/financial data.
+   Auto-populate assumptions.py from actual BSE/NSE filings.
+   Makes the model dynamic rather than static.
+
+EXTENSION 4: STREAMLIT DASHBOARD
+   Convert the model into an interactive web app using Streamlit.
+   Users slide bars to change assumptions, charts update in real-time.
+   Much more impressive for a portfolio demo than static charts.
+
+EXTENSION 5: DCF VALUATION MODULE
+   Add a separate DCF (Discounted Cash Flow) valuation to cross-check
+   the LBO entry price. Compare DCF intrinsic value vs LBO purchase price.
+   Full buy-side analysis in one tool.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 12: INTERVIEW TALKING POINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When a PE interviewer asks about this project, here's how to answer:
+
+Q: "Walk me through this LBO model."
+A: "I built a full LBO model in Python for Devyani International —
+    the KFC and Pizza Hut franchisee in India. The model assumes an
+    8x entry multiple on ₹120 Cr EBITDA — that's a ₹960 Cr acquisition
+    funded 65% with debt and 35% equity. Over 5 years, the company's
+    free cash flow pays down the debt, and I exit at 9x on a higher
+    EBITDA base. Base case gives 23% IRR and 2.7x MoM. The biggest
+    return driver is debt paydown at roughly 48% of value created."
+
+Q: "How did you handle the circular reference between interest and FCF?"
+A: "The income statement needs interest expense to compute FCF, but
+    interest expense depends on the debt balance, which depends on
+    prior FCF — a classic LBO circular dependency. I solved it
+    iteratively: start with a simplified flat-debt assumption, compute
+    FCF, build a debt schedule, feed the real opening balances back
+    into the income statement, and repeat until closing balances
+    converge within ₹0.01 Cr. Typically takes 3-5 iterations."
+
+Q: "What does your Bear Case tell you?"
+A: "In the Bear Case — 6% revenue growth, 14% EBITDA margin, 7x exit,
+    11% interest rate — the model generates around 11% IRR and 1.7x MoM.
+    That means even in an adverse scenario, equity is not destroyed.
+    The deal has margin of safety. The Distressed Case at near-recession
+    assumptions still returns capital at about 1.1x MoM — barely, but
+    the company doesn't default because the cash sweep still services
+    the debt even with compressed margins."
+
+Q: "What would change your return attribution most?"
+A: "Debt paydown is currently the biggest driver at 48%. If we extended
+    the hold period from 5 to 7 years, debt paydown would increase but
+    IRR would likely fall due to time dilution. The most leveraged return
+    driver per unit of management effort is multiple expansion — one
+    extra turn on exit EBITDA of ₹215 Cr adds ₹215 Cr of enterprise
+    value directly to equity. That's why PE firms obsess over exit timing."
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 13: RESUME LINE (COPY-PASTE READY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LBO Financial Model — Python                                              2024
+• Built end-to-end LBO model across 7 modular Python files modelling
+  ₹960Cr acquisition of Devyani International with 65/35 debt-equity structure
+• Solved circular income statement–debt dependency iteratively; base case
+  yields 23% IRR and 2.7x MoM over 5-year hold period
+• Automated Bull/Base/Bear/Distressed scenario analysis and dual sensitivity
+  heatmaps across 42 deal combinations using seaborn and matplotlib
+• Auto-generates formatted 5-sheet Excel investment tearsheet via openpyxl
+  with color-coded returns, debt schedule, and scenario comparison
+  GitHub: github.com/yourusername/LBO-Model
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
