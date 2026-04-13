@@ -1,0 +1,9 @@
+numpy
+numpy_financial
+pandas
+matplotlib
+seaborn
+openpyxl
+fastapi
+uvicorn[standard]
+pydantic
