@@ -1,16 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/dist"
-      }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "services",
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "backend": {
+      "entrypoint": "backend",
+      "routePrefix": "/_/backend",
+      "framework": "fastapi"
     }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(?!api(?:/|$)).*", "dest": "/index.html" }
-  ]
+  }
 }
