@@ -1,0 +1,54 @@
+# --- Backend generated artifacts ---
+/backend/outputs/
+/outputs/
+
+# Optional local data folders (not used by code today)
+/backend/data/
+/data/
+
+# --- Python (bytecode, caches, virtualenvs, tooling) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment/config files
+.env
+.env.*
+
+# --- Node / frontend build artifacts ---
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/extensions.json
+
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
