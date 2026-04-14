@@ -1,16 +1,25 @@
-# React + Vite
+# LBO Modeler — Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the UI for the LBO Modeler. It calls the backend API and renders deal KPIs, scenario comparisons, and sensitivity outputs.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Start the backend API (from the repo root):
+	- `python -m pip install -r backend/requirements.txt`
+	- `python -m uvicorn backend.api:app --port 8001`
 
-## React Compiler
+2. Start the frontend (from `frontend/`):
+	- `npm ci`
+	- `npm run dev`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The frontend reads the backend URL from `VITE_API_URL`.
+- Copy `frontend/.env.example` to `frontend/.env` and edit if needed.
 
-## Expanding the ESLint configuration
+## Deploy to Vercel (frontend)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. In Vercel, set the Root Directory to `frontend/`.
+2. Add an Environment Variable:
+	- `VITE_API_URL` = your deployed backend base URL
+3. Deploy.
+
+Note: the backend is FastAPI and should be deployed separately (e.g. Render/Railway/Fly.io) unless you intentionally convert it into Vercel serverless functions.
