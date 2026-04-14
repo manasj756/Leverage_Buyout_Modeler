@@ -58,7 +58,7 @@ def parse_args():
     parser.add_argument("--entry",   type=float, default=None, help="Entry EV/EBITDA multiple")
     parser.add_argument("--exit",    type=float, default=None, help="Exit EV/EBITDA multiple")
     parser.add_argument("--cagr",    type=float, default=None, help="Revenue CAGR (e.g. 0.12)")
-    parser.add_argument("--debt",    type=float, default=None, help="Debt % of EV (e.g. 0.65)")
+    parser.add_argument("--debt",    type=float, default=None, help="Debt %% of EV (e.g. 0.65)")
     parser.add_argument("--hold",    type=int,   default=None, help="Holding period in years")
     parser.add_argument("--no-plots",action="store_true",      help="Skip chart generation")
     return parser.parse_args()
