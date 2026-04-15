@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, Cell, ReferenceLine, ComposedChart, Line
 } from 'recharts'
 
+const DEFAULT_API_URL = import.meta.env.PROD ? '/_/backend' : 'http://127.0.0.1:8001'
 const API_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001').replace(/\/$/, '')
 
 // ── Default Assumptions ────────────────────────────────────
